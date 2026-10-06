@@ -6,6 +6,8 @@ import tn.esprit.autoloc.domain.CategorieVehicule;
 import tn.esprit.autoloc.domain.StatutVehicule;
 
 import java.math .*;
+import java.util.HashSet;
+import java.util.Set;
 
 @Entity
 @Table(name = "vehicule")
@@ -38,5 +40,20 @@ public class Vehicule {
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 20)
     private StatutVehicule statut;
+
+    //relation ManyToOne vers Agence
+    @ManyToOne
+    private Agence agence;
+    @OneToMany(mappedBy = "vehicule", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+    private Set<Reservation> reservations = new HashSet<>();
+
+    @ManyToMany(fetch = FetchType.LAZY)
+    @JoinTable(
+            name = "vehicule_equipement",
+            joinColumns = @JoinColumn(name = "vehicule_id"),
+            inverseJoinColumns = @JoinColumn(name = "equipement_id")
+    )
+    private Set<Equipement> equipements = new HashSet<>();
+
 
 }
