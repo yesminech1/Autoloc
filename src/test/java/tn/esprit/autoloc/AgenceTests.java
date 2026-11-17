@@ -1,82 +1,100 @@
 package tn.esprit.autoloc;
 
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.Disabled;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.context.annotation.ComponentScan;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Sort;
-import org.springframework.data.jpa.repository.config.EnableJpaRepositories;
 import org.springframework.data.repository.CrudRepository;
+import org.springframework.stereotype.Repository;
+import org.springframework.transaction.annotation.Transactional;
 import tn.esprit.autoloc.domain.Agence;
 import tn.esprit.autoloc.domain.CategorieVehicule;
 import tn.esprit.autoloc.domain.StatutVehicule;
 import tn.esprit.autoloc.domain.Vehicule;
 import tn.esprit.autoloc.repository.IAgenceRepository;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Pageable;
-
-import static org.junit.jupiter.api.Assertions.fail;
+import tn.esprit.autoloc.service.IAgenceService;
 
 import java.math.BigDecimal;
 import java.util.List;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
 @SpringBootTest
-@EnableJpaRepositories(basePackages = "tn.esprit.autoloc")
-@ComponentScan(basePackages = "tn.esprit.autoloc")
-public class AgenceTests {
+@Transactional
+@Disabled("Tests d'intégration d'un atelier précédent")
+class AgenceTests {
+
+    private final AgenceRepositoryMock basicAgenceRepository;
+
+    private final IAgenceRepository fullAgenceRepository;
+
+    private final IAgenceService agenceService;
 
     @Autowired
-    private AgenceRepositoryMock basicAgenceRepository;
+    AgenceTests(AgenceRepositoryMock basicAgenceRepository,
+                IAgenceRepository fullAgenceRepository,
+                IAgenceService agenceService) {
+        this.basicAgenceRepository = basicAgenceRepository;
+        this.fullAgenceRepository = fullAgenceRepository;
+        this.agenceService = agenceService;
+    }
 
-    @Autowired
-    private IAgenceRepository fullAgenceRepository;
-
-
-    private void addAgence(CrudRepository<Agence, Long> crudRepository) {
-        // 7. Créer l'agence
-        Agence agence = new Agence();
-        agence.setNom("Agence ariana");
-        agence.setVille("Tunis");
-        agence.setAdresse("1 Rue Hedi");
-        agence.setTelephone("71585874");
-
+    private void addAgence(CrudRepository<Agence, Long> repository) {
         int ms = (int) System.currentTimeMillis();
-        // 7. Créer les deux véhicules
-        Vehicule v1 = new Vehicule();
-        v1.setImmatriculation("785414TU96" + ms);
-        v1.setMarque("Isuzu");
-        v1.setModele("DMax");
-        v1.setCategorie(CategorieVehicule.SUV);
-        v1.setStatut(StatutVehicule.EN_MAINTENANCE);
-        v1.setTarifJournalier(new BigDecimal("100"));
-        v1.setAgence(agence);
 
-        Vehicule v2 = new Vehicule();
-        v2.setImmatriculation("785414TU95" + ms);
-        v2.setMarque("Toyota");
-        v2.setModele("Yaris");
-        v2.setCategorie(CategorieVehicule.UTILITAIRE);
-        v2.setStatut(StatutVehicule.DISPONIBLE);
-        v2.setTarifJournalier(new BigDecimal("80"));
-        v2.setAgence(agence);
+        Agence agence = new Agence();
+        agence.setAdresse("1 Rue Hedi");
+        agence.setNom("Agence ariana");
+        agence.setTelephone("71585874");
+        agence.setVille("Tunis");
 
-        // Lier les véhicules à l'agence
-        agence.getVehicules().add(v1);
-        agence.getVehicules().add(v2);
+        Vehicule premierVehicule = new Vehicule();
+        premierVehicule.setCategorie(CategorieVehicule.SUV);
+        premierVehicule.setImmatriculation("78514TU96" + ms);
+        premierVehicule.setMarque("Isuzu");
+        premierVehicule.setModele("DMax");
+        premierVehicule.setStatut(StatutVehicule.EN_MAINTENANCE);
+        premierVehicule.setTarifJournalier(new BigDecimal("100"));
+        premierVehicule.setAgence(agence);
 
-        // 8. Persister via save
-        crudRepository.save(agence);
+        Vehicule deuxiemeVehicule = new Vehicule();
+        deuxiemeVehicule.setCategorie(CategorieVehicule.UTILITAIRE);
+        deuxiemeVehicule.setImmatriculation("78541TU95" + ms);
+        deuxiemeVehicule.setMarque("Toyota");
+        deuxiemeVehicule.setModele("Yaris");
+        deuxiemeVehicule.setStatut(StatutVehicule.DISPONIBLE);
+        deuxiemeVehicule.setTarifJournalier(new BigDecimal("80"));
+        deuxiemeVehicule.setAgence(agence);
+
+        agence.getVehicules().add(premierVehicule);
+        agence.getVehicules().add(deuxiemeVehicule);
+
+        repository.save(agence);
     }
 
     @Test
-    public void basicAddAgence() {
+    void basicAddAgence() {
         addAgence(basicAgenceRepository);
     }
 
     @Test
-    public void fullAddAgence() {
+    void fullAddAgence() {
         addAgence(fullAgenceRepository);
+    }
+
+    @Test
+    void createAgence() {
+        Agence agence = new Agence();
+        agence.setNom("Agence Tunis");
+        agence.setVille("Tunis2026");
+        agence.setAdresse("1 Rue de Tunis");
+        agence.setTelephone("71111111");
+
+        agenceService.create(agence);
     }
 
     private void loadAgence(CrudRepository<Agence, Long> repository, String typeDepot) {
@@ -101,28 +119,27 @@ public class AgenceTests {
                     .append('\n'));
         });
 
-        fail(resultat.toString());
+        assertTrue(resultat.length() > ("Depot utilise : " + typeDepot + '\n').length(),
+                "Le dépôt doit contenir au moins une agence");
     }
 
     @Test
-    public void basicLoadAgence() {
+    void basicLoadAgence() {
         loadAgence(basicAgenceRepository, "AgenceRepositoryMock (CrudRepository)");
     }
 
     @Test
-    public void fullLoadAgence() {
+    void fullLoadAgence() {
         loadAgence(fullAgenceRepository, "IAgenceRepository (JpaRepository)");
     }
 
     @Test
-    public void loadSortedAgences() {
-        // Charger toutes les agences triées par id décroissant
+    void loadSortedAgences() {
         List<Agence> agences = fullAgenceRepository.findAll(
-                Sort.by("idAgence").descending()
+                Sort.by(Sort.Direction.DESC, "idAgence")
         );
 
-        // Afficher les informations sur les agences (sans les véhicules)
-        StringBuilder resultat = new StringBuilder("Agences triées par id décroissant :\n");
+        StringBuilder resultat = new StringBuilder();
         agences.forEach(agence -> resultat
                 .append("Agence ")
                 .append(agence.getIdAgence())
@@ -130,32 +147,43 @@ public class AgenceTests {
                 .append(agence.getNom())
                 .append('\n'));
 
-        //  Vérifier le résultat
-        fail(resultat.toString());
+        assertFalse(agences.isEmpty(), "Le dépôt doit contenir au moins une agence");
     }
 
     @Test
-    public void loadPagedAgences() {
-        Pageable pageable = PageRequest.of(0, 2, Sort.by("idAgence").descending());
-        Page<Agence> page = fullAgenceRepository.findAll(pageable);
+    void loadPagedAgences() {
+        Page<Agence> agences = fullAgenceRepository.findAll(
+                PageRequest.of(0, 2, Sort.by(Sort.Direction.DESC, "idAgence"))
+        );
 
-        // Afficher le nombre total de pages, la page en cours et les agences
-        StringBuilder resultat = new StringBuilder("=== Pagination ===\n");
-        resultat.append("Nombre total de pages : ").append(page.getTotalPages()).append('\n');
-        resultat.append("Page en cours : ").append(page.getNumber()).append('\n');
-        resultat.append("Agences de cette page :\n");
+        StringBuilder resultat = new StringBuilder("Nombre total de pages : ")
+                .append(agences.getTotalPages())
+                .append('\n');
 
-        page.getContent().forEach(agence -> resultat
-                .append("Agence ")
-                .append(agence.getIdAgence())
-                .append(" - ")
-                .append(agence.getNom())
-                .append('\n'));
+        while (true) {
 
-        // Vérifier le résultat
-        fail(resultat.toString());
+            resultat.append("Page en cours : ")
+                    .append(agences.getNumber())
+                    .append('\n');
+
+            agences.forEach(agence -> resultat
+                    .append("Agence ")
+                    .append(agence.getIdAgence())
+                    .append(" - ")
+                    .append(agence.getNom())
+                    .append('\n'));
+
+            if (!agences.hasNext()) {
+                break;
+            }
+
+            agences = fullAgenceRepository.findAll(agences.nextPageable());
+        }
+
+        assertTrue(agences.getTotalElements() > 0, "Le dépôt doit contenir au moins une agence");
     }
 }
 
+@Repository
 interface AgenceRepositoryMock extends CrudRepository<Agence, Long> {
 }

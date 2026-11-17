@@ -1,4 +1,7 @@
 package tn.esprit.autoloc.repository;
 
-public interface IPaiementRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+import tn.esprit.autoloc.domain.Paiement;
+
+public interface IPaiementRepository extends JpaRepository<Paiement, Long> {
 }

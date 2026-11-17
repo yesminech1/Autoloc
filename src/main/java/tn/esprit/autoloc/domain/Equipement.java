@@ -1,7 +1,16 @@
 package tn.esprit.autoloc.domain;
 
-import jakarta.persistence.*;
-import lombok.*;
+import jakarta.persistence.Column;
+import jakarta.persistence.Entity;
+import jakarta.persistence.GeneratedValue;
+import jakarta.persistence.GenerationType;
+import jakarta.persistence.Id;
+import jakarta.persistence.ManyToMany;
+import jakarta.persistence.Table;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
 
 import java.util.HashSet;
 import java.util.Set;
@@ -18,9 +27,9 @@ public class Equipement {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long idEquipement;
 
-    @Column(nullable = false, length = 50)
+    @Column(nullable = false, length = 100)
     private String libelle;
 
-    @ManyToMany(mappedBy = "equipements", fetch = FetchType.LAZY)
+    @ManyToMany(mappedBy = "equipements")
     private Set<Vehicule> vehicules = new HashSet<>();
 }

@@ -1,11 +1,10 @@
 package tn.esprit.autoloc.domain;
 
-import jakarta.persistence .*;
-import lombok .*;
-import tn.esprit.autoloc.domain.CategorieVehicule;
-import tn.esprit.autoloc.domain.StatutVehicule;
+import com.fasterxml.jackson.annotation.JsonBackReference;
+import jakarta.persistence.*;
+import lombok.*;
 
-import java.math .*;
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -41,19 +40,16 @@ public class Vehicule {
     @Column(nullable = false, length = 20)
     private StatutVehicule statut;
 
-    //relation ManyToOne vers Agence
     @ManyToOne
+    @JsonBackReference("agence-vehicules")
     private Agence agence;
-    @OneToMany(mappedBy = "vehicule", cascade = CascadeType.REMOVE, fetch = FetchType.LAZY)
+
+    @OneToMany(cascade = CascadeType.REMOVE, mappedBy = "vehicule", fetch = FetchType.LAZY)
     private Set<Reservation> reservations = new HashSet<>();
 
-    @ManyToMany(fetch = FetchType.LAZY)
-    @JoinTable(
-            name = "vehicule_equipement",
-            joinColumns = @JoinColumn(name = "vehicule_id"),
-            inverseJoinColumns = @JoinColumn(name = "equipement_id")
-    )
+    @OneToMany(mappedBy = "vehicule")
+    private Set<Maintenance> maintenances = new HashSet<>();
+
+    @ManyToMany
     private Set<Equipement> equipements = new HashSet<>();
-
-
 }

@@ -1,4 +1,7 @@
 package tn.esprit.autoloc.repository;
 
-public interface IReservationRepository {
+import org.springframework.data.jpa.repository.JpaRepository;
+import tn.esprit.autoloc.domain.Reservation;
+
+public interface IReservationRepository extends JpaRepository<Reservation, Long> {
 }
