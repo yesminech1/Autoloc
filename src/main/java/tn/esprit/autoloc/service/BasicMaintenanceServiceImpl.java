@@ -36,5 +36,6 @@ public class BasicMaintenanceServiceImpl extends GenericServiceImpl<Maintenance,
         target.setDateDebut(source.getDateDebut());
         target.setDateFin(source.getDateFin());
         target.setDescription(source.getDescription());
+        target.setVehicule(source.getVehicule());
     }
 }

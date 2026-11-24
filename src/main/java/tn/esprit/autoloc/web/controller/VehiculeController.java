@@ -1,11 +1,13 @@
 package tn.esprit.autoloc.web.controller;
 
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.autoloc.calcul.VehiculeOffre;
-import tn.esprit.autoloc.domain.Vehicule;
 import tn.esprit.autoloc.service.IVehiculeService;
+import tn.esprit.autoloc.web.dto.VehiculeDto;
+import tn.esprit.autoloc.web.mapper.VehiculeMapper;
 
 import java.util.List;
 
@@ -15,26 +17,29 @@ import java.util.List;
 public class VehiculeController {
 
     private final IVehiculeService vehiculeService;
+    private final VehiculeMapper vehiculeMapper;
 
     @GetMapping
-    public List<Vehicule> findAll() {
-        return vehiculeService.findAll();
+    public List<VehiculeDto> findAll() {
+        return vehiculeMapper.toDtos(vehiculeService.findAll());
     }
 
     @GetMapping("/{id}")
-    public Vehicule findById(@PathVariable Long id) {
-        return vehiculeService.findById(id);
+    public VehiculeDto findById(@PathVariable Long id) {
+        return vehiculeMapper.toDto(vehiculeService.findById(id));
     }
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public Vehicule create(@RequestBody Vehicule vehicule) {
-        return vehiculeService.create(vehicule);
+    public VehiculeDto create(@Valid @RequestBody VehiculeDto vehiculeDto) {
+        return vehiculeMapper.toDto(vehiculeService.create(vehiculeMapper.toEntity(vehiculeDto)));
     }
 
     @PutMapping("/{id}")
-    public Vehicule update(@PathVariable Long id, @RequestBody Vehicule vehicule) {
-        return vehiculeService.update(id, vehicule);
+    public VehiculeDto update(@PathVariable Long id, @Valid @RequestBody VehiculeDto vehiculeDto) {
+        var vehicule = vehiculeService.findById(id);
+        vehiculeMapper.updateEntity(vehiculeDto, vehicule);
+        return vehiculeMapper.toDto(vehiculeService.update(id, vehicule));
     }
 
     @DeleteMapping("/{id}")
@@ -51,8 +56,8 @@ public class VehiculeController {
         return vehiculeService.calculerTarif(vehiculeService.findById(id), jours, offre);
     }
     @PutMapping("/{id}/desaffectation")
-    public Vehicule desaffecte(@PathVariable Long id) {
-        return vehiculeService.desaffecte(id);
+    public VehiculeDto desaffecte(@PathVariable Long id) {
+        return vehiculeMapper.toDto(vehiculeService.desaffecte(id));
     }
 
 }
